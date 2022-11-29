@@ -13,7 +13,7 @@ use Sabre\Xml\Writer;
 use Sabre\Xml\XmlSerializable;
 
 class Invoice implements XmlSerializable{
-    private $UBLVersionID = '2.1';
+    private $UBLVersionID = '2.0';
 
     /**
      * @var int
@@ -63,7 +63,14 @@ class Invoice implements XmlSerializable{
      * @var AllowanceCharge[]
      */
     private $allowanceCharges;
-
+    /**
+     * @var \CleverIt\UBL\Invoice\PaymentMeans
+     */
+    private $paymentMeans;
+    /**
+     * @var string
+     */
+    private $note;
 
     function validate()
     {
@@ -106,19 +113,44 @@ class Invoice implements XmlSerializable{
 
         $writer->write([
             Schema::CBC . 'UBLVersionID' => $this->UBLVersionID,
-            Schema::CBC . 'CustomizationID' => 'OIOUBL-2.01',
+            Schema::CBC . 'CustomizationID' => '1.0',
+            Schema::CBC . 'ProfileID' => 'FFF.BE',
             Schema::CBC . 'ID' => $this->id,
             Schema::CBC . 'CopyIndicator' => $this->copyIndicator ? 'true' : 'false',
             Schema::CBC . 'IssueDate' => $this->issueDate->format('Y-m-d'),
-            Schema::CBC . 'InvoiceTypeCode' => $this->invoiceTypeCode,
-            Schema::CAC . 'AccountingSupplierParty' => [Schema::CAC . "Party" => $this->accountingSupplierParty],
-            Schema::CAC . 'AccountingCustomerParty' => [Schema::CAC . "Party" => $this->accountingCustomerParty],
+            [
+                'name' => Schema::CBC . 'InvoiceTypeCode',
+                'value' => $this->invoiceTypeCode,
+                'attributes' => [
+                    'listURI' => 'http://www.FFF.be/ubl/2.0/cl/gc/BE-InvoiceCode-1.0.gc'
+                ]
+            ],
+            Schema::CBC . 'DocumentCurrencyCode' => 'EUR',
+            Schema::CBC . 'LineCountNumeric' => count($this->invoiceLines),
+            Schema::CBC . 'Note' => $this->note,
         ]);
 
-        if($this->additionalDocumentReference!= null){
-            $writer->write([
-                Schema::CAC . 'AdditionalDocumentReference' => $this->additionalDocumentReference,
-            ]);
+        if ($this->additionalDocumentReference != null) {
+            $writer->write(
+                [
+                    Schema::CAC . 'AdditionalDocumentReference' => $this->additionalDocumentReference,
+                ]
+            );
+        }
+
+        $writer->write(
+            [
+                Schema::CAC . 'AccountingSupplierParty' => [Schema::CAC . "Party" => $this->accountingSupplierParty],
+                Schema::CAC . 'AccountingCustomerParty' => [Schema::CAC . "Party" => $this->accountingCustomerParty],
+            ]
+        );
+
+        if ($this->paymentMeans != null) {
+            $writer->write(
+                [
+                    Schema::CAC . 'PaymentMeans' => $this->paymentMeans
+                ]
+            );
         }
 
         if ($this->allowanceCharges != null) {
@@ -323,4 +355,35 @@ class Invoice implements XmlSerializable{
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getPaymentMeans()
+    {
+        return $this->paymentMeans;
+    }
+
+    /**
+     * @param mixed $paymentMeans
+     */
+    public function setPaymentMeans($paymentMeans)
+    {
+        $this->paymentMeans = $paymentMeans;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNote()
+    {
+        return $this->note;
+    }
+
+    /**
+     * @param string $note
+     */
+    public function setNote($note)
+    {
+        $this->note = $note;
+    }
 }

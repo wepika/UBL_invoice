@@ -82,14 +82,20 @@ class Price implements XmlSerializable {
                     'currencyID' => Generator::$currencyID
                 ]
             ],
-            [
-                'name' => Schema::CBC.'BaseQuantity',
-                'value' => $this->baseQuantity,
-                'attributes' => [
-                    'unitCode' => $this->unitCode
-                ]
-            ]
-
         ]);
+
+        if ($this->baseQuantity != null) {
+            $writer->write(
+                [
+                    [
+                        'name' => Schema::CBC . 'BaseQuantity',
+                        'value' => $this->baseQuantity,
+                        'attributes' => [
+                            'unitCode' => $this->unitCode
+                        ]
+                    ]
+                ]
+            );
+        }
     }
 }

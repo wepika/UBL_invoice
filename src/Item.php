@@ -74,12 +74,26 @@ class Item implements XmlSerializable {
      * @return void
      */
     function xmlSerialize(Writer $writer) {
+        if ($this->description != null) {
+            $writer->write(
+                [
+                    Schema::CBC . 'Description' => $this->description,
+                ]
+            );
+        }
+
         $writer->write([
-           Schema::CBC.'Description' => $this->description,
            Schema::CBC.'Name' => $this->name,
-           Schema::CAC.'SellersItemIdentification' => [
-               Schema::CBC.'ID' => $this->sellersItemIdentification
-           ],
         ]);
+
+        if ($this->sellersItemIdentification != null) {
+            $writer->write(
+                [
+                    Schema::CAC . 'SellersItemIdentification' => [
+                        Schema::CBC . 'ID' => $this->sellersItemIdentification
+                    ],
+                ]
+            );
+        }
     }
 }
